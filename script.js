@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "Lancamentos"
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbzOp4mfANY_yNGyOdnNLsAoNAIRsj3kl1RXx6hjYMYS6Ge79Jdo3k8l-5w8l7Ed2eYDNw/exec", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "FuturasCompras"
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbzOp4mfANY_yNGyOdnNLsAoNAIRsj3kl1RXx6hjYMYS6Ge79Jdo3k8l-5w8l7Ed2eYDNw/exec", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
