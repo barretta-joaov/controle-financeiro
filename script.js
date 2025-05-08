@@ -56,18 +56,19 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "Lancamentos"
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbzOp4mfANY_yNGyOdnNLsAoNAIRsj3kl1RXx6hjYMYS6Ge79Jdo3k8l-5w8l7Ed2eYDNw/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
       method: "POST",
+      mode: "no-cors",
       body: JSON.stringify(payload),
       headers: {
         "Content-Type": "application/json"
       }
-    }).then(res => {
-      alert("Lançamento salvo com sucesso!");
+    }).then(() => {
+      alert("Lançamento enviado com sucesso!");
       this.reset();
       atualizarFormulario();
     }).catch(() => {
-      alert("Erro ao salvar. Verifique a conexão com o Google Sheets.");
+      alert("Erro ao enviar lançamento.");
     });
   });
 
@@ -89,14 +90,15 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "FuturasCompras"
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbzOp4mfANY_yNGyOdnNLsAoNAIRsj3kl1RXx6hjYMYS6Ge79Jdo3k8l-5w8l7Ed2eYDNw/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
       method: "POST",
+      mode: "no-cors",
       body: JSON.stringify(payload),
       headers: {
         "Content-Type": "application/json"
       }
-    }).then(res => {
-      alert("Futura compra registrada!");
+    }).then(() => {
+      alert("Futura compra enviada com sucesso!");
       this.reset();
     }).catch(() => {
       alert("Erro ao registrar futura compra.");
