@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dadosDivida.style.display = this.checked ? "block" : "none";
   }
 
-  // Submissão do formulário de lançamento
+  // Enviar lançamento
   document.getElementById("formLancamento").addEventListener("submit", function (e) {
     e.preventDefault();
     const tipo = document.getElementById("tipo").value;
@@ -67,12 +67,13 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Lançamento enviado com sucesso!");
       this.reset();
       atualizarFormulario();
+      carregarLancamentos(); // Atualiza a lista ao vivo
     }).catch(() => {
       alert("Erro ao enviar lançamento.");
     });
   });
 
-  // Submissão do formulário de futuras compras
+  // Enviar futura compra
   document.getElementById("formFuturaCompra").addEventListener("submit", function (e) {
     e.preventDefault();
     const nome = document.getElementById("nomeItem").value;
@@ -100,8 +101,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }).then(() => {
       alert("Futura compra enviada com sucesso!");
       this.reset();
+      carregarLancamentos(); // para atualizar se for o caso
     }).catch(() => {
       alert("Erro ao registrar futura compra.");
     });
   });
+
+  // Carrega os lançamentos da planilha
+  function carregarLancamentos() {
+    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec")
+      .then(res => res.json())
+      .then(dados => {
+        const secao = document.getElementById("lancamentos");
+        const antigaTabela = secao.querySelector("table");
+        if (antigaTabela) secao.removeChild(antigaTabela);
+
+        const tabela = document.createElement("table");
+        tabela.innerHTML = "<tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Categoria</th><th>Método</th><th>Origem</th><th>É Dívida?</th><th>Credor</th><th>Status</th></tr>";
+
+        for (let i = 1; i < dados.length; i++) {
+          const linha = dados[i];
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${linha[0]}</td>
+            <td>${linha[1]}</td>
+            <td>R$ ${parseFloat(linha[2]).toFixed(2)}</td>
+            <td>${linha[3]}</td>
+            <td>${linha[4]}</td>
+            <td>${linha[5]}</td>
+            <td>${linha[6]}</td>
+            <td>${linha[7]}</td>
+            <td>${linha[8]}</td>
+            <td>${linha[9]}</td>
+          `;
+          tabela.appendChild(tr);
+        }
+
+        secao.appendChild(tabela);
+      })
+      .catch(err => {
+        console.error("Erro ao buscar dados:", err);
+      });
+  }
+
+  carregarLancamentos(); // Carrega ao iniciar
 });
