@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "Lancamentos"
     };
 
-    fetch("COLE_AQUI_SUA_URL_DO_GOOGLE_APPS_SCRIPT", {
+    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: {
