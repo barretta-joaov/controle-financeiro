@@ -1,0 +1,117 @@
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fc;
+  margin: 0;
+  padding-bottom: 80px;
+  color: #333;
+}
+
+header {
+  background-color: #4CAF50;
+  color: white;
+  padding: 1em;
+  text-align: center;
+}
+
+nav {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+nav button {
+  margin: 0.3em;
+  padding: 0.6em 1.2em;
+  border: none;
+  background-color: #ffffff;
+  color: #4CAF50;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+nav button:hover {
+  background-color: #c8f1d2;
+}
+
+main {
+  padding: 1.5em;
+}
+
+.aba {
+  display: none;
+}
+
+.aba.ativa {
+  display: block;
+}
+
+form {
+  background-color: white;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  margin-bottom: 2em;
+}
+
+form label {
+  display: block;
+  margin-top: 1em;
+  font-weight: 600;
+}
+
+form input,
+form select,
+form button {
+  width: 100%;
+  padding: 0.6em;
+  margin-top: 0.3em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+form button {
+  margin-top: 1.5em;
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+form button:hover {
+  background-color: #45a049;
+}
+
+footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 1em;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+#listaFuturasCompras {
+  background-color: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+.comprado {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.alerta-parcelas {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 1em;
+  border-radius: 6px;
+  margin-top: 1em;
+  border: 1px solid #ffeeba;
+}
