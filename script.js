@@ -1,49 +1,39 @@
-// Função para fazer parse de uma string CSV em um array de arrays (linhas e colunas)
+
+const PLANILHA_ID = "10JyoUIge47CAJ1PB1r1NU6bxGAgKKb0qZv-nNQSQvQM";
+
+// Função para parse de CSV (mantida)
 function parseCsv(data) {
   const regex = /(,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^,\r\n]*))/gi;
   const result = [[]];
   let matches;
   while ((matches = regex.exec(data))) {
-    // Quando encontrarmos um separador de registro (quebra de linha), iniciamos um novo array para a próxima linha
-    if (matches[1] && matches[1] !== ',') {
-      result.push([]);
-    }
-    // O valor capturado está em matches[2] se estava entre aspas, ou em matches[3] se era um campo não entre aspas
-    const matchedValue = matches[2] !== undefined 
-                           ? matches[2].replace(/""/g, '"')  // substitui aspas duplas escapadas por aspas simples
-                           : matches[3];
+    if (matches[1] && matches[1] !== ',') result.push([]);
+    const matchedValue = matches[2] !== undefined
+      ? matches[2].replace(/""/g, '"')
+      : matches[3];
     result[result.length - 1].push(matchedValue);
   }
   return result;
 }
 
-// Função para converter array de arrays em array de objetos usando a primeira linha como cabeçalho
 function arrayToObjects(csvArray) {
-  const rows = csvArray.slice(1);             // copia todas as linhas menos o cabeçalho
-  const headers = csvArray[0] || [];          // primeira linha são os cabeçalhos
+  const rows = csvArray.slice(1);
+  const headers = csvArray[0] || [];
   return rows.map(row => {
     const obj = {};
-    headers.forEach((header, i) => {
-      obj[header] = row[i] || "";             // associa cada coluna ao valor correspondente ou "" se indefinido
-    });
+    headers.forEach((header, i) => obj[header] = row[i] || "");
     return obj;
   });
 }
 
-// Função para criar uma tabela HTML a partir de uma lista de objetos e anexá-la em um container DOM
 function createTable(containerId, dataObjects) {
   const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`Contêiner #${containerId} não encontrado no DOM.`);
-    return;
-  }
-  // Limpa qualquer conteúdo existente no container
+  if (!container) return;
   container.innerHTML = "";
-  // Cria elementos da tabela
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const tbody = document.createElement('tbody');
-  // Cabeçalhos da tabela (usando as chaves do primeiro objeto de dados, se houver)
+
   if (dataObjects.length > 0) {
     const headerRow = document.createElement('tr');
     const headers = Object.keys(dataObjects[0]);
@@ -54,10 +44,10 @@ function createTable(containerId, dataObjects) {
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
-    // Linhas de dados
+
     dataObjects.forEach(item => {
       const row = document.createElement('tr');
-      Object.values(item).forEach(value => {   // pega os valores na ordem dos headers
+      Object.values(item).forEach(value => {
         const td = document.createElement('td');
         td.textContent = value;
         row.appendChild(td);
@@ -69,29 +59,97 @@ function createTable(containerId, dataObjects) {
   container.appendChild(table);
 }
 
-// URLs públicas CSV de cada aba (planilha deve estar "Publish to web" ativada)
-const urls = [
-  { id: 'resumo', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=1822421314&single=true&output=csv' },
-  { id: 'dividas', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=405968735&single=true&output=csv' },
-  { id: 'listaFuturasCompras', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=142866091&single=true&output=csv' }
-];
-
-// Quando o DOM estiver pronto, iniciar a carga dos dados
-window.addEventListener('DOMContentLoaded', async () => {
-  for (const sheet of urls) {
-    try {
-      const response = await fetch(sheet.url);
-      if (!response.ok) {
-        console.error(`Erro ${response.status} ao carregar ${sheet.id}: ${response.statusText}`);
-        continue; // pula para a próxima aba em caso de erro nesta
-      }
-      const csvText = await response.text();
-      const dataArray = parseCsv(csvText);
+function fetchCsvToTable(sheetName, containerId) {
+  const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=${sheetName}&single=true&output=csv`;
+  fetch(url)
+    .then(res => res.text())
+    .then(csv => {
+      const dataArray = parseCsv(csv);
       const dataObjects = arrayToObjects(dataArray);
-      createTable(sheet.id, dataObjects);
-      console.log(`Dados da aba '${sheet.id}' carregados com sucesso.`);
-    } catch (err) {
-      console.error(`Falha ao buscar os dados da aba '${sheet.id}':`, err);
-    }
+      createTable(containerId, dataObjects);
+    })
+    .catch(err => console.error("Erro ao buscar dados:", err));
+}
+
+function atualizarTabelas() {
+  fetchCsvToTable("1822421314", "resumo");
+  fetchCsvToTable("405968735", "dividas");
+  fetchCsvToTable("142866091", "listaFuturasCompras");
+}
+
+// ENVIO DE DADOS PARA APPS SCRIPT
+function enviarParaPlanilha(payload) {
+  fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" }
+  }).then(() => {
+    alert("Enviado com sucesso!");
+    atualizarTabelas(); // atualiza visualmente
+  }).catch(() => alert("Erro ao enviar dados."));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  atualizarTabelas();
+
+  // Formulário de lançamento
+  const formLancamento = document.getElementById("formLancamento");
+  if (formLancamento) {
+    formLancamento.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const tipo = document.getElementById("tipo").value;
+      const data = document.getElementById("data").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const descricao = document.getElementById("descricao").value;
+      const categoria = document.getElementById("categoria")?.value || "";
+      const metodoPagamento = document.getElementById("metodoPagamento")?.value || "";
+      const ondeEntrou = document.getElementById("ondeEntrou")?.value || "";
+      const eDivida = document.getElementById("eDivida")?.checked || false;
+      const credor = document.getElementById("credor")?.value || "";
+      const statusDivida = document.getElementById("statusDivida")?.value || "";
+
+      const payload = {
+        tipo,
+        data,
+        valor,
+        descricao,
+        categoria,
+        metodoPagamento,
+        ondeEntrou,
+        eDivida,
+        credor,
+        statusDivida,
+        origem: "Lancamentos"
+      };
+
+      enviarParaPlanilha(payload);
+      this.reset();
+    });
+  }
+
+  // Formulário de futuras compras
+  const formCompra = document.getElementById("formFuturaCompra");
+  if (formCompra) {
+    formCompra.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const nome = document.getElementById("nomeItem").value;
+      const valor = parseFloat(document.getElementById("valorItem").value);
+      const parcelas = parseInt(document.getElementById("parcelasItem").value);
+      const link = document.getElementById("linkItem").value;
+
+      const payload = {
+        nome,
+        valor,
+        parcelas,
+        link,
+        status: "Pendente",
+        comprado: false,
+        origem: "FuturasCompras"
+      };
+
+      enviarParaPlanilha(payload);
+      this.reset();
+    });
   }
 });
