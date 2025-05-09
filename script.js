@@ -1,4 +1,4 @@
-// Configuração
+// Configuração das fontes de dados CSV por aba da planilha Google
 const PLANILHA_CSV = {
   resumo: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=1822421314&single=true&output=csv',
   dividas: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=405968735&single=true&output=csv',
@@ -7,28 +7,23 @@ const PLANILHA_CSV = {
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec';
 
-// Funções para abas
-function exibirAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('ativa'));
-  document.getElementById(abaId).classList.add('ativa');
-}
-
-// Formulário dinâmico
+// Função para atualizar formulário dinamicamente
 function atualizarFormulario() {
-  const tipoSelecionado = document.getElementById("tipo").value;
-  document.getElementById("campoCategoria").style.display = tipoSelecionado === "despesa" ? "block" : "none";
-  document.getElementById("campoMetodoPagamento").style.display = tipoSelecionado === "despesa" ? "block" : "none";
-  document.getElementById("campoOndeEntrou").style.display = tipoSelecionado === "receita" ? "block" : "none";
-  document.getElementById("campoDivida").style.display = tipoSelecionado === "despesa" ? "block" : "none";
+  const tipo = document.getElementById("tipo").value;
+  document.getElementById("campoCategoria").style.display = tipo === "despesa" ? "block" : "none";
+  document.getElementById("campoMetodoPagamento").style.display = tipo === "despesa" ? "block" : "none";
+  document.getElementById("campoOndeEntrou").style.display = tipo === "receita" ? "block" : "none";
+  document.getElementById("campoDivida").style.display = tipo === "despesa" ? "block" : "none";
   mostrarCamposDivida();
 }
 
 function mostrarCamposDivida() {
   const check = document.getElementById("eDivida");
-  document.getElementById("dadosDivida").style.display = check && check.checked ? "block" : "none";
+  const campos = document.getElementById("dadosDivida");
+  if (check && campos) campos.style.display = check.checked ? "block" : "none";
 }
 
-// CSV parser
+// Parse CSV
 function parseCsv(text) {
   const linhas = text.trim().split('\n');
   const headers = linhas[0].split(',');
@@ -40,7 +35,7 @@ function parseCsv(text) {
   });
 }
 
-// Tabela visual
+// Cria tabela a partir de dados
 function createTable(containerId, dados) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -48,10 +43,7 @@ function createTable(containerId, dados) {
     container.textContent = "Nenhum dado encontrado.";
     return;
   }
-
   const tabela = document.createElement("table");
-  tabela.classList.add("dados-financeiros");
-
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
   Object.keys(dados[0]).forEach(coluna => {
@@ -76,97 +68,87 @@ function createTable(containerId, dados) {
   container.appendChild(tabela);
 }
 
-// Carrega CSV para as abas
-async function carregarTabelas() {
-  for (const aba in PLANILHA_CSV) {
-    try {
-      const resposta = await fetch(PLANILHA_CSV[aba]);
-      const texto = await resposta.text();
-      const dados = parseCsv(texto);
-      createTable(aba, dados);
-    } catch (erro) {
-      console.error(`Erro ao carregar ${aba}:`, erro);
-    }
+// Carrega CSV de uma aba
+async function carregarTabela(aba) {
+  try {
+    const resposta = await fetch(PLANILHA_CSV[aba]);
+    const texto = await resposta.text();
+    const dados = parseCsv(texto);
+    createTable(aba, dados);
+  } catch (erro) {
+    console.error(`Erro ao carregar ${aba}:`, erro);
   }
 }
 
 // Envio de lançamento
 function configurarFormulario() {
-  const formLanc = document.getElementById("formLancamento");
-  formLanc.addEventListener("submit", function (e) {
+  const form = document.getElementById("formLancamento");
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
-
-    const tipo = document.getElementById("tipo").value;
-    const data = document.getElementById("data").value;
-    const valor = document.getElementById("valor").value;
-    const descricao = document.getElementById("descricao").value;
-    const categoria = document.getElementById("categoria")?.value || "";
-    const metodoPagamento = document.getElementById("metodoPagamento")?.value || "";
-    const ondeEntrou = document.getElementById("ondeEntrou")?.value || "";
-    const eDivida = document.getElementById("eDivida")?.checked || false;
-    const credor = document.getElementById("credor")?.value || "";
-    const statusDivida = document.getElementById("statusDivida")?.value || "";
-
     const payload = {
-      tipo, data, valor, descricao,
-      categoria: tipo === "despesa" ? categoria : "",
-      metodoPagamento: tipo === "despesa" ? metodoPagamento : "",
-      ondeEntrou: tipo === "receita" ? ondeEntrou : "",
-      eDivida: tipo === "despesa" && eDivida,
-      credor: tipo === "despesa" && eDivida ? credor : "",
-      statusDivida: tipo === "despesa" && eDivida ? statusDivida : "",
+      tipo: form.tipo.value,
+      data: form.data.value,
+      valor: form.valor.value,
+      descricao: form.descricao.value,
+      categoria: form.tipo.value === "despesa" ? form.categoria.value : "",
+      metodoPagamento: form.tipo.value === "despesa" ? form.metodoPagamento.value : "",
+      ondeEntrou: form.tipo.value === "receita" ? form.ondeEntrou.value : "",
+      eDivida: form.tipo.value === "despesa" && form.eDivida.checked,
+      credor: form.eDivida.checked ? form.credor.value : "",
+      statusDivida: form.eDivida.checked ? form.statusDivida.value : "",
       origem: "Lancamentos"
     };
-
     fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" }
     });
-
     alert("Lançamento enviado!");
-    formLanc.reset();
+    form.reset();
     atualizarFormulario();
-    setTimeout(carregarTabelas, 2000);
+    setTimeout(() => carregarTabela("resumo"), 2000);
   });
 }
 
 // Envio de futura compra
 function configurarFormularioCompra() {
-  const formCompra = document.getElementById("formFuturaCompra");
-  formCompra.addEventListener("submit", function (e) {
+  const form = document.getElementById("formFuturaCompra");
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
-
     const payload = {
-      nome: document.getElementById("nomeItem").value,
-      valor: document.getElementById("valorItem").value,
-      parcelas: document.getElementById("parcelasItem").value,
-      link: document.getElementById("linkItem").value,
+      nome: form.nomeItem.value,
+      valor: form.valorItem.value,
+      parcelas: form.parcelasItem.value,
+      link: form.linkItem.value,
       status: "Pendente",
       comprado: false,
       origem: "FuturasCompras"
     };
-
     fetch(SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" }
     });
-
     alert("Compra enviada!");
-    formCompra.reset();
-    setTimeout(() => carregarTabelas(), 2000);
+    form.reset();
+    setTimeout(() => carregarTabela("listaFuturasCompras"), 2000);
   });
 }
 
 // Inicialização
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("formLancamento")) configurarFormulario();
+  if (document.getElementById("formFuturaCompra")) configurarFormularioCompra();
   atualizarFormulario();
-  carregarTabelas();
-  configurarFormulario();
-  configurarFormularioCompra();
-  document.getElementById("tipo").addEventListener("change", atualizarFormulario);
-  document.getElementById("eDivida").addEventListener("change", mostrarCamposDivida);
+  if (document.getElementById("resumo")) carregarTabela("resumo");
+  if (document.getElementById("dividas")) carregarTabela("dividas");
+  if (document.getElementById("listaFuturasCompras")) carregarTabela("listaFuturasCompras");
+  const tipo = document.getElementById("tipo");
+  const eDivida = document.getElementById("eDivida");
+  if (tipo) tipo.addEventListener("change", atualizarFormulario);
+  if (eDivida) eDivida.addEventListener("change", mostrarCamposDivida);
 });
