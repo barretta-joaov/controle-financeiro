@@ -1,99 +1,59 @@
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lançamentos - Controle Financeiro</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <h1>💸 Controle Financeiro Pessoal</h1>
-    <nav>
-      <a href="lancamentos.html" class="ativo">Lançar</a>
-      <a href="resumo.html">Resumo</a>
-      <a href="dividas.html">Dívidas</a>
-      <a href="futuras-compras.html">Futuras Compras</a>
-      <a href="graficos.html">Gráficos</a>
-    </nav>
-  </header>
+<script>
+  const arduinoID = "arduino1";
 
-  <main>
-    <section>
-      <h2>Lançar Receita ou Despesa</h2>
-      <form id="formLancamento">
-        <label>Tipo:</label>
-        <select id="tipo" name="tipo" required>
-          <option value="receita">Receita</option>
-          <option value="despesa">Despesa</option>
-        </select>
+  document.querySelectorAll('.led-btn').forEach(button => {
+    const imgSrc = button.getAttribute('data-img');
+    if (imgSrc) {
+      button.style.backgroundImage = `url('${imgSrc}')`;
+    }
+  });
 
-        <label>Data:</label>
-        <input type="date" id="data" name="data" required />
+  function sendCommand(pin, action) {
+    fetch(`/arduino/${arduinoID}/${action}/${pin}`)
+      .then(response => response.text())
+      .then(data => console.log(data))
+      .catch(error => console.error('Erro ao enviar comando:', error));
+  }
 
-        <label>Valor:</label>
-        <input type="number" id="valor" name="valor" required />
+  function updateButtonStates() {
+    fetch(`/estado/${arduinoID}`)
+      .then(response => response.json())
+      .then(states => {
+        document.querySelectorAll('.led-btn').forEach(button => {
+          const pin = button.getAttribute('data-pin');
+          const isOn = states[pin] === 'on';
+          button.classList.toggle('active', isOn);
+        });
+      })
+      .catch(error => console.error('Erro ao carregar estados:', error));
+  }
 
-        <div id="campoOndeEntrou" style="display:none;">
-          <label>Onde entrou o dinheiro?</label>
-          <select id="ondeEntrou" name="ondeEntrou">
-            <option value="VR">VR</option>
-            <option value="Salario">Salário</option>
-            <option value="Outro">Outro</option>
-          </select>
-        </div>
+  function sendAllCommand(action) {
+    const buttons = document.querySelectorAll('.led-btn');
+    buttons.forEach(button => {
+      const pin = button.getAttribute('data-pin');
+      fetch(`/arduino/${arduinoID}/${action}/${pin}`)
+        .then(response => response.text())
+        .then(() => {
+          button.classList.toggle('active', action === 'ligar');
+        })
+        .catch(error => console.error(`Erro ao ${action} pino ${pin}:`, error));
+    });
+  }
 
-        <div id="campoCategoria" style="display:none;">
-          <label>Categoria:</label>
-          <select id="categoria" name="categoria">
-            <option value="Alimentação">Alimentação</option>
-            <option value="Transporte">Transporte</option>
-            <option value="Saúde">Saúde</option>
-            <option value="Lazer">Lazer</option>
-            <option value="Moradia">Moradia</option>
-            <option value="Contas">Contas</option>
-            <option value="Compras">Compras</option>
-            <option value="Educação">Educação</option>
-            <option value="Impostos">Impostos</option>
-            <option value="Outros">Outros</option>
-          </select>
-        </div>
+  document.querySelectorAll('.led-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const pin = button.getAttribute('data-pin');
+      const isActive = button.classList.contains('active');
+      const action = isActive ? 'desligar' : 'ligar';
+      sendCommand(pin, action);
+      button.classList.toggle('active', !isActive);
+    });
+  });
 
-        <div id="campoMetodoPagamento" style="display:none;">
-          <label>Método de pagamento:</label>
-          <select id="metodoPagamento" name="metodoPagamento">
-            <option value="VR">VR</option>
-            <option value="Salario">Salário</option>
-          </select>
-        </div>
+  document.getElementById('all-on').addEventListener('click', () => sendAllCommand('ligar'));
+  document.getElementById('all-off').addEventListener('click', () => sendAllCommand('desligar'));
 
-        <label>Descrição:</label>
-        <input type="text" id="descricao" name="descricao" required />
-
-        <div id="campoDivida" style="display:none;">
-          <label>É dívida?</label>
-          <input type="checkbox" id="eDivida" name="eDivida" />
-          <div id="dadosDivida" style="display:none;">
-            <label>Credor:</label>
-            <input type="text" id="credor" name="credor" />
-            <label>Status da dívida:</label>
-            <select id="statusDivida" name="statusDivida">
-              <option value="Em aberto">Em aberto</option>
-              <option value="Pago">Pago</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit">Salvar lançamento</button>
-      </form>
-    </section>
-  </main>
-
-  <footer>
-    <p>Desenvolvido para GitHub Pages com integração ao Google Sheets</p>
-  </footer>
-
-  <script src="script.js"></script>
-</body>
-</html>
+  window.onload = updateButtonStates;
+</script>

@@ -38,14 +38,6 @@ main {
   padding: 20px;
 }
 
-.aba {
-  display: none;
-}
-
-.aba.ativa {
-  display: block;
-}
-
 form {
   background: white;
   padding: 20px;
