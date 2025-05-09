@@ -1,5 +1,5 @@
 
-const PLANILHA_ID = "2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2";
+const PLANILHA_ID = "10JyoUIge47CAJ1PB1r1NU6bxGAgKKb0qZv-nNQSQvQM";
 
 function exibirAba(abaId) {
   document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('ativa'));
