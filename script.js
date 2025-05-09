@@ -39,10 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     dados.forEach(linha => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${linha.data}</td>
-        <td>${linha.tipo}</td>
-        <td>R$ ${parseFloat(linha.valor || 0).toFixed(2)}</td>
-        <td>${linha.descricao}</td>
+        <td>${linha["Data"]}</td>
+        <td>${linha["Tipo"]}</td>
+        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
+        <td>${linha["Descrição"]}</td>
       `;
       tabela.appendChild(tr);
     });
@@ -59,12 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
     dados.forEach(linha => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${linha.data}</td>
-        <td>R$ ${parseFloat(linha.valor || 0).toFixed(2)}</td>
-        <td>${linha.categoria}</td>
-        <td>${linha.método}</td>
-        <td>${linha.credor}</td>
-        <td>${linha.status}</td>
+        <td>${linha["Data"]}</td>
+        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
+        <td>${linha["Categoria"]}</td>
+        <td>${linha["Método"]}</td>
+        <td>${linha["Credor"]}</td>
+        <td>${linha["Status"]}</td>
       `;
       tabela.appendChild(tr);
     });
@@ -81,11 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
     dados.forEach(linha => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${linha.nome}</td>
-        <td>R$ ${parseFloat(linha.valor || 0).toFixed(2)}</td>
-        <td>${linha.parcelas}</td>
-        <td><a href="${linha.link}" target="_blank">Ver</a></td>
-        <td>${linha.status}</td>
+        <td>${linha["Nome"]}</td>
+        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
+        <td>${linha["Parcelas"]}</td>
+        <td><a href="${linha["Link"]}" target="_blank">Ver</a></td>
+        <td>${linha["Status"]}</td>
       `;
       tabela.appendChild(tr);
     });
