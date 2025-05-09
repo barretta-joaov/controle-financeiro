@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
     dadosDivida.style.display = this.checked ? "block" : "none";
   }
 
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec";
+
   // Enviar lançamento
   document.getElementById("formLancamento").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -56,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
       origem: "Lancamentos"
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
+    fetch(GAS_URL, {
       method: "POST",
       mode: "no-cors",
       body: JSON.stringify(payload),
@@ -67,52 +69,27 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Lançamento enviado com sucesso!");
       this.reset();
       atualizarFormulario();
-      carregarLancamentos(); // Atualiza a lista ao vivo
-    }).catch(() => {
+      carregarLancamentos(); // Atualiza lista ao vivo
+    }).catch(err => {
       alert("Erro ao enviar lançamento.");
+      console.error("Erro POST:", err);
     });
   });
 
-  // Enviar futura compra
-  document.getElementById("formFuturaCompra").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const nome = document.getElementById("nomeItem").value;
-    const valor = parseFloat(document.getElementById("valorItem").value);
-    const parcelas = parseInt(document.getElementById("parcelasItem").value);
-    const link = document.getElementById("linkItem").value;
-
-    const payload = {
-      nome,
-      valor,
-      parcelas,
-      link,
-      status: "Pendente",
-      comprado: false,
-      origem: "FuturasCompras"
-    };
-
-    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify(payload),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }).then(() => {
-      alert("Futura compra enviada com sucesso!");
-      this.reset();
-      carregarLancamentos(); // para atualizar se for o caso
-    }).catch(() => {
-      alert("Erro ao registrar futura compra.");
-    });
-  });
-
-  // Carrega os lançamentos da planilha
+  // Carregar lançamentos com GET (modo cors)
   function carregarLancamentos() {
-    fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec")
-      .then(res => res.json())
+    fetch(GAS_URL, {
+      method: "GET",
+      mode: "cors"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao carregar dados");
+        return res.json();
+      })
       .then(dados => {
         const secao = document.getElementById("lancamentos");
+        if (!secao) return;
+
         const antigaTabela = secao.querySelector("table");
         if (antigaTabela) secao.removeChild(antigaTabela);
 
@@ -140,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         secao.appendChild(tabela);
       })
       .catch(err => {
-        console.error("Erro ao buscar dados:", err);
+        console.error("Erro ao buscar dados (GET):", err);
       });
   }
 
