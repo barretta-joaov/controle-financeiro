@@ -1,95 +1,97 @@
-
-const PLANILHA_ID = "10JyoUIge47CAJ1PB1r1NU6bxGAgKKb0qZv-nNQSQvQM";
-
-function exibirAba(abaId) {
-  document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('ativa'));
-  document.getElementById(abaId).classList.add('ativa');
+// Função para fazer parse de uma string CSV em um array de arrays (linhas e colunas)
+function parseCsv(data) {
+  const regex = /(,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^,\r\n]*))/gi;
+  const result = [[]];
+  let matches;
+  while ((matches = regex.exec(data))) {
+    // Quando encontrarmos um separador de registro (quebra de linha), iniciamos um novo array para a próxima linha
+    if (matches[1] && matches[1] !== ',') {
+      result.push([]);
+    }
+    // O valor capturado está em matches[2] se estava entre aspas, ou em matches[3] se era um campo não entre aspas
+    const matchedValue = matches[2] !== undefined 
+                           ? matches[2].replace(/""/g, '"')  // substitui aspas duplas escapadas por aspas simples
+                           : matches[3];
+    result[result.length - 1].push(matchedValue);
+  }
+  return result;
 }
 
-function atualizarFormulario() {
-  const tipoSelecionado = document.getElementById("tipo").value;
-  document.getElementById("campoCategoria").style.display = tipoSelecionado === "despesa" ? "block" : "none";
-  document.getElementById("campoMetodoPagamento").style.display = tipoSelecionado === "despesa" ? "block" : "none";
-  document.getElementById("campoOndeEntrou").style.display = tipoSelecionado === "receita" ? "block" : "none";
-  document.getElementById("campoDivida").style.display = tipoSelecionado === "despesa" ? "block" : "none";
-  mostrarCamposDivida();
+// Função para converter array de arrays em array de objetos usando a primeira linha como cabeçalho
+function arrayToObjects(csvArray) {
+  const rows = csvArray.slice(1);             // copia todas as linhas menos o cabeçalho
+  const headers = csvArray[0] || [];          // primeira linha são os cabeçalhos
+  return rows.map(row => {
+    const obj = {};
+    headers.forEach((header, i) => {
+      obj[header] = row[i] || "";             // associa cada coluna ao valor correspondente ou "" se indefinido
+    });
+    return obj;
+  });
 }
 
-function mostrarCamposDivida() {
-  const check = document.getElementById("eDivida");
-  document.getElementById("dadosDivida").style.display = check && check.checked ? "block" : "none";
+// Função para criar uma tabela HTML a partir de uma lista de objetos e anexá-la em um container DOM
+function createTable(containerId, dataObjects) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`Contêiner #${containerId} não encontrado no DOM.`);
+    return;
+  }
+  // Limpa qualquer conteúdo existente no container
+  container.innerHTML = "";
+  // Cria elementos da tabela
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+  // Cabeçalhos da tabela (usando as chaves do primeiro objeto de dados, se houver)
+  if (dataObjects.length > 0) {
+    const headerRow = document.createElement('tr');
+    const headers = Object.keys(dataObjects[0]);
+    headers.forEach(colName => {
+      const th = document.createElement('th');
+      th.textContent = colName;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    // Linhas de dados
+    dataObjects.forEach(item => {
+      const row = document.createElement('tr');
+      Object.values(item).forEach(value => {   // pega os valores na ordem dos headers
+        const td = document.createElement('td');
+        td.textContent = value;
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+  }
+  container.appendChild(table);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  atualizarFormulario();
+// URLs públicas CSV de cada aba (planilha deve estar "Publish to web" ativada)
+const urls = [
+  { id: 'resumo', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=1822421314&single=true&output=csv' },
+  { id: 'dividas', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=405968735&single=true&output=csv' },
+  { id: 'listaFuturasCompras', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/pub?gid=142866091&single=true&output=csv' }
+];
 
-  const fetchDados = (sheet, callback) => {
-    fetch(`https://gsx2json.com/api?id=${PLANILHA_ID}&sheet=${sheet}`)
-      .then(res => res.json())
-      .then(json => callback(json.rows))
-      .catch(err => console.error(`Erro ao buscar ${sheet}:`, err));
-  };
-
-  // Lançamentos (Resumo)
-  fetchDados("Lancamentos", dados => {
-    const secao = document.getElementById("resumo");
-    const tabela = document.createElement("table");
-    tabela.innerHTML = "<h2>Lançamentos</h2><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descrição</th></tr>";
-
-    dados.forEach(linha => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${linha["Data"]}</td>
-        <td>${linha["Tipo"]}</td>
-        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
-        <td>${linha["Descrição"]}</td>
-      `;
-      tabela.appendChild(tr);
-    });
-
-    secao.appendChild(tabela);
-  });
-
-  // Dívidas
-  fetchDados("Dividas", dados => {
-    const secao = document.getElementById("dividas");
-    const tabela = document.createElement("table");
-    tabela.innerHTML = "<h2>Dívidas</h2><tr><th>Data</th><th>Valor</th><th>Categoria</th><th>Método</th><th>Credor</th><th>Status</th></tr>";
-
-    dados.forEach(linha => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${linha["Data"]}</td>
-        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
-        <td>${linha["Categoria"]}</td>
-        <td>${linha["Método"]}</td>
-        <td>${linha["Credor"]}</td>
-        <td>${linha["Status"]}</td>
-      `;
-      tabela.appendChild(tr);
-    });
-
-    secao.appendChild(tabela);
-  });
-
-  // Futuras Compras
-  fetchDados("FuturasCompras", dados => {
-    const secao = document.getElementById("listaFuturasCompras");
-    const tabela = document.createElement("table");
-    tabela.innerHTML = "<tr><th>Nome</th><th>Valor</th><th>Parcelas</th><th>Link</th><th>Status</th></tr>";
-
-    dados.forEach(linha => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${linha["Nome"]}</td>
-        <td>R$ ${parseFloat(linha["Valor"] || 0).toFixed(2)}</td>
-        <td>${linha["Parcelas"]}</td>
-        <td><a href="${linha["Link"]}" target="_blank">Ver</a></td>
-        <td>${linha["Status"]}</td>
-      `;
-      tabela.appendChild(tr);
-    });
-
-    secao.appendChild(tabela);
-  });
+// Quando o DOM estiver pronto, iniciar a carga dos dados
+window.addEventListener('DOMContentLoaded', async () => {
+  for (const sheet of urls) {
+    try {
+      const response = await fetch(sheet.url);
+      if (!response.ok) {
+        console.error(`Erro ${response.status} ao carregar ${sheet.id}: ${response.statusText}`);
+        continue; // pula para a próxima aba em caso de erro nesta
+      }
+      const csvText = await response.text();
+      const dataArray = parseCsv(csvText);
+      const dataObjects = arrayToObjects(dataArray);
+      createTable(sheet.id, dataObjects);
+      console.log(`Dados da aba '${sheet.id}' carregados com sucesso.`);
+    } catch (err) {
+      console.error(`Falha ao buscar os dados da aba '${sheet.id}':`, err);
+    }
+  }
 });
