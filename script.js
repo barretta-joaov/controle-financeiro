@@ -15,11 +15,56 @@ function atualizarFormulario() {
 
 function mostrarCamposDivida() {
   const check = document.getElementById("eDivida");
-  document.getElementById("dadosDivida").style.display = check.checked ? "block" : "none";
+  document.getElementById("dadosDivida").style.display = check && check.checked ? "block" : "none";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   atualizarFormulario();
+
+  // Envio de lançamento para Apps Script
+  const formLancamento = document.getElementById("formLancamento");
+  if (formLancamento) {
+    formLancamento.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const tipo = document.getElementById("tipo").value;
+      const data = document.getElementById("data").value;
+      const valor = document.getElementById("valor").value;
+      const descricao = document.getElementById("descricao").value;
+      const categoria = document.getElementById("categoria")?.value || "";
+      const metodoPagamento = document.getElementById("metodoPagamento")?.value || "";
+      const ondeEntrou = document.getElementById("ondeEntrou")?.value || "";
+      const eDivida = document.getElementById("eDivida")?.checked || false;
+      const credor = document.getElementById("credor")?.value || "";
+      const statusDivida = document.getElementById("statusDivida")?.value || "";
+
+      const payload = {
+        tipo,
+        data,
+        valor,
+        descricao,
+        categoria: tipo === "despesa" ? categoria : "",
+        metodoPagamento: tipo === "despesa" ? metodoPagamento : "",
+        ondeEntrou: tipo === "receita" ? ondeEntrou : "",
+        eDivida: tipo === "despesa" && eDivida,
+        credor: tipo === "despesa" && eDivida ? credor : "",
+        statusDivida: tipo === "despesa" && eDivida ? statusDivida : "",
+        origem: "Lancamentos"
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec", {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      alert("Lançamento enviado!");
+      this.reset();
+      atualizarFormulario();
+    });
+  }
 
   // Lançamentos
   fetch("https://opensheet.elk.sh/2PACX-1vRIfqgdPpJwoW9GItC8QMaD3fWidJHHocejM6GxW1o3FTJcgbtEl9jnze76pozn6SfWYil_YNdTowV2/Lancamentos")
