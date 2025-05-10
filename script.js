@@ -129,3 +129,39 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo")?.addEventListener("change", atualizarFormulario);
   document.getElementById("eDivida")?.addEventListener("change", mostrarCamposDivida);
 });
+
+
+
+
+// === RESUMO FINANCEIRO ===
+function carregarResumoFinanceiro() {
+  fetch('https://script.google.com/macros/s/AKfycbweMhI9Gy6Kwsy5sCLUNd4Ru0kVlg6njrBsSVDyBdbZwluJlza4k8VYOjQYnQWruBnIgg/exec')
+    .then(response => response.json())
+    .then(resumo => {
+      const divResumo = document.querySelector('#resumo');
+      if (!divResumo) return;
+
+      divResumo.innerHTML = `
+        <div class="cardResumo">
+          <h3>💰 Saldo disponível</h3>
+          <p><strong>Geral:</strong> R$ ${resumo.saldoGeral}</p>
+          <p><strong>Salário:</strong> R$ ${resumo.saldoSalario}</p>
+          <p><strong>VR:</strong> R$ ${resumo.saldoVR}</p>
+        </div>
+        <div class="cardResumo">
+          <h3>📉 Dívidas</h3>
+          <p><strong>Mês atual:</strong> R$ ${resumo.dividasMesAtual}</p>
+          <p><strong>Mês anterior:</strong> R$ ${resumo.dividasMesAnterior}</p>
+          <p><strong>Variação:</strong> ${resumo.variacaoDividas}</p>
+        </div>
+      `;
+    })
+    .catch(error => console.error('Erro ao carregar resumo financeiro:', error));
+}
+
+// Chamar automaticamente se for a aba resumo
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.location.pathname.includes('resumo.html')) {
+    carregarResumoFinanceiro();
+  }
+});
